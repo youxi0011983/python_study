@@ -8,6 +8,7 @@
 *.o
 *.s
 *.exe
+*.xlsx
 #过滤文件夹Debug,Release,obj
 Debug/
 Release/
