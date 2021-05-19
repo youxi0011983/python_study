@@ -10,7 +10,11 @@
 *.exe
 *.xlsx
 *.csv
+*.spec
 #过滤文件夹Debug,Release,obj
 Debug/
 Release/
 obj/
+build/
+dist/
+__pycache__/
