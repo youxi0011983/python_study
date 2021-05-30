@@ -1,6 +1,11 @@
 # -*- coding : utf-8 -*-
 # coding: utf-8
 
+#
+#  读取csv文件的记录，按条件筛选，输入到不同的excel文件中
+#
+
+
 import pandas as pd
 import os
 import time
