@@ -103,6 +103,7 @@ class FileEventHandler(FileSystemEventHandler):
         upload.close()
 
 
+
 if __name__ == "__main__":
     # 验证所有的文件夹都存在
     for server_name in ['dev', 'sit', 'uat']:

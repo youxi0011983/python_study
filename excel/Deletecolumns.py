@@ -10,6 +10,7 @@ import pandas as pd
 import os
 import time
 import chardet
+import datetime
 
 # 要判断状态的列
 ACTIVATE_COLUMN = 'Bug状态'
@@ -87,20 +88,22 @@ def func_select_active_line(df_line):
 
 # 选择解决日期今天的行settle
 def func_select_settle_today(df_settle):
-    data_string = time.strftime("%Y-%m-%d")
-    list_str = list(data_string)
-    list_str.pop(5)
-    data_string = ''.join(list_str)
+    # data_string = time.strftime("%Y-%m-%d")
+    # data_string=data_string.lstrip("0").replace(" 0", "")
+    data_string = str(datetime.datetime.now().year) + '-' + str(datetime.datetime.now().month) + '-' + str(
+        datetime.datetime.now().day)
+    # list_str = list(data_string)
+    # data_string = ''.join(list_str)
     df_settle = df_settle[(df_settle[SETTLE_COLUMN].isin([data_string]))]
     return df_settle
 
 
 # 选择创建日期今天的行
 def func_select_create_today(df_create):
-    data_string = time.strftime("%Y-%m-%d")
-    list_str = list(data_string)
-    list_str.pop(5)
-    data_string = ''.join(list_str)
+    data_string = str(datetime.datetime.now().year) + '-' + str(datetime.datetime.now().month) + '-' + str(
+        datetime.datetime.now().day)
+    # list_str = list(data_string)
+    # data_string = ''.join(list_str)
     df_create = df_create[(df_create[CREATE_COLUMN].isin([data_string]))]
     return df_create
 
