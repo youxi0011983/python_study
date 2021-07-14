@@ -21,3 +21,5 @@ __pycache__/
 venv/
 uploadFileAndUseShell/example/
 jar/
+.idae/
+myweb/
