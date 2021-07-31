@@ -11,7 +11,7 @@ if __name__ == '__main__':
     headers = {
 
         'Content-Type': 'application/json;charset=UTF-8',
-        'X-Bce-Signature': 'AppCode/d1ccc29f9f0e43fdb33640058bb6d284'
+        'X-Bce-Signature': 'AppCode/'
     }
     r = requests.request("POST", url, data=data, headers=headers)
     print(r.content)
