@@ -21,5 +21,6 @@ __pycache__/
 venv/
 uploadFileAndUseShell/example/
 jar/
-.idae/
+.idea/
 myweb/
+image/
