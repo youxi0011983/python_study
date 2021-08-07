@@ -1579,4 +1579,359 @@ Scarpy中的组件主要包括：
 
 每一个过程的具体含义：
 
-1. 
+1. 主要将下一次要爬取的网址传递给Scrapy引擎。
+2. Scrapy引擎主要将网址传递给下载中间件
+3. 下载中间件接收到Scrapy引擎传过来网址后，传递给下载器。
+4. 下载器收到对应的下载的网址，会对互联网中对应的网址发送request请求
+5. 互联网接收到request请求之后，会有响应的response。
+6. 下载器接收到响应之后，即完成对应网页的下载，
+7. 下载中间件接收到对应响应之后，会与Scrapy引擎进行通信，将对应的reponse响应传递给Scrapy引擎
+8. scrapy引擎接收到response响应之后，将response响应信息传递给爬虫中间件
+9. 爬虫中间件接收到对应响应之后，会将响应传递给对应爬虫处理
+10. 爬出进行处理之后，大致会有两方面的信息：提取出来的数据和新的请求信息
+11. 爬虫中间件接收到对应信息后，会将对应信息传递到Scrapy引擎
+12. Scrapy引擎接收到爬虫处理之后的信息会同时和实体管道做进一步处理。
+
+
+
+## 第十四章 Scrapy中文输出与存储
+
+### 14.1、Scrapy的中文输出
+
+主要时2.x中文输出不显示，
+
+### 14.2、Scrapy的中文存储
+
+### 14.3、输出中文到JSON文件
+
+json文件也会有中文不显示，显示编码问题
+
+~~~python
+codecs.open("d:/python/mydata.json","wb",,encoding="utf-8")
+~~~
+
+## 第十五章 编写自动爬取网页的爬虫
+
+### 15.1、实战：items的编写
+
+~~~python
+# Define here the models for your scraped items
+#
+# See documentation in:
+# https://docs.scrapy.org/en/latest/topics/items.html
+
+import scrapy
+
+
+class AutopjtItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    # 商品名称
+    name = scrapy.Field()
+    # 存储商品价格
+    price = scrapy.Field()
+    # 商品链接
+    link = scrapy.Field()
+    # 商品评论数
+    comnum = scrapy.Field()
+
+~~~
+
+### 15.2、pipelines的编写
+
+~~~python
+# Define your item pipelines here
+#
+# Don't forget to add your pipeline to the ITEM_PIPELINES setting
+# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+
+
+# useful for handling different item types with a single interface
+from itemadapter import ItemAdapter
+
+import codecs
+import json
+
+
+class AutopjtPipeline:
+    def __init__(self):
+        # 打开mydata。json文件
+        self.file = codecs.open("d:/code/autopjt/mydata.json", "wb", encoding="utf-8")
+
+    def process_item(self, item, spider):
+        i = json.dumps(dict(item),ensure_ascii=False)
+        # 每条数据后加上踢换行
+        line = i +'\n'
+        # 数据写入到 mydata.json文件中
+        self.file.write(line)
+        return item
+
+    def close_spider(self,spider):
+        # 关闭 mydata.json文件
+        self.file.close()
+~~~
+
+### 15.3、settings编写
+
+### 15.4、自动爬虫编写实战
+
+名称 xpath表达式为：”//a[@class='pic']/@title"
+
+~~~python
+import scrapy
+from autopjt.items import AutopjtItem
+from scrapy.http import Request
+
+
+class AutospdSpider(scrapy.Spider):
+    name = 'autospd'
+    allowed_domains = ['dangdang.com']
+    start_urls = ['http://category.dangdang.com/pg1-cid4002048.html']
+
+    def parse(self, response):
+        item = AutopjtItem
+        # 通过各Xpath表达式提取商品价格、名称、链接、评论等信息
+        item["name"] = response.xpath("//a[@class='pic']/@title").extract()
+        item["price"] = response.xpath("//span[@class='price_n']/text()").extract()
+        item["link"] = response.xpath("//a[@class='pic']/@href").extract()
+        item["comnum"] = response.xpath("//a[@name='P_pl']/text()").extract()
+
+        # 提取完成后返回item
+        yield item
+        for i in range(1, 3):
+            url = "http://category.dangdang.com/pg" + str(i) + "-cid4002048.html"
+            # 通过yield返回 Reqest，并指定爬取的网址和回调函数
+            # 实现自动爬取
+            yield Request(url, callback=self.parse)
+
+~~~
+
+## 第十六章 CrawlSpider
+
+### 16.1、初识CrawlSpider
+
+创建一个自动爬虫
+
+~~~shell
+scrapy startproject mycwpjt
+~~~
+
+爬虫的具体内容
+
+~~~python
+import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+
+
+class WeisuSpider(CrawlSpider):
+    name = 'weisu'
+    allowed_domains = ['sohu.com']
+    start_urls = ['http://sohu.com/']
+
+    rules = (
+        Rule(LinkExtractor(allow=r'Items/'), callback='parse_item', follow=True),
+    )
+
+    def parse_item(self, response):
+        item = {}
+        #item['domain_id'] = response.xpath('//input[@id="sid"]/@value').get()
+        #item['name'] = response.xpath('//div[@id="name"]').get()
+        #item['description'] = response.xpath('//div[@id="description"]').get()
+        return item
+~~~
+
+### 16.2、链接提取器
+
+~~~python
+ rules = (
+        Rule(LinkExtractor(allow=r'Items/'), callback='parse_item', follow=True),
+    )
+~~~
+
+| 参数名          | 参数含义                                                     |
+| --------------- | ------------------------------------------------------------ |
+| allow           | 提取复核对应正则表达式链接                                   |
+| deny            | 不提取复核对应正则表达式链接                                 |
+| restrict_xpaths | 使用xpath表达式与allow共同作用提取出同时符合对应xpath表达式和对应正则表达式的链接 |
+| allow_domains   | 允许提取的域名，比如我们想只提取莫格域名下的链接时会用到     |
+| deny_domains    | 禁止提取的域名，比如我们需要限制一定不提取某个域名下的链接时会用到 |
+
+我们想要提取有".shtml"字符串的链接，可以将rules规则设置为如下
+
+~~~python
+ rules = (
+        Rule(LinkExtractor(allow=('.shtml')), callback='parse_item', follow=True),
+    )
+~~~
+
+限制只是搜索搜狐的链接。
+
+~~~python
+ rules = (
+        Rule(LinkExtractor(allow=('.shtml')), allow_domain=(sohu.com), callback='parse_item', follow=True),
+    )
+~~~
+
+### 16.3、实战：CrawlSpider实例
+
+CrawlSpider工作流：
+
+![image-20210806084814834](https://i.loli.net/2021/08/06/OtrKEjhnMbqL6u4.png)
+
+~~~python
+import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+
+
+class WeisuSpider(CrawlSpider):
+    name = 'weisu'
+    allowed_domains = ['sohu.com']
+    start_urls = ['http://news.sohu.com/']
+
+    rules = (
+        # 新闻网页的URL地址类似于：
+        # ”http://news.sohu.com.com/20160926/n469167364.shtml
+        # 所以可以得到提取的正则表达式为 '.*?/n.*?shtml'
+        Rule(LinkExtractor(allow=('.*?/n.*?shtml'), allow_domains=('sohu.com')), callback='parse_item', follow=True),
+    )
+
+    def parse_item(self, response):
+        item = {}
+        # 根据xpath表达式提取新闻网页中的标题
+        item["name"] = response.xpath("/html/head/title/text()").extract()
+        # 根据xpath表达式提取当前新闻网页的链接
+        item["link"] = response.xpath("//link[@rel='canonical']/@href").extract()
+        return item
+
+~~~
+
+我们还可以在链接提取器LinkExtractor中通过restrict_xpaths参数设置一个xpath表达式于allow参数中设置的正则表达式共同来实现链接的过滤和提取
+
+CrawlSpider和之前自动爬虫的区别：
+
+1. CrawlSpider与第15章中学习的自动爬虫实现原理不同，一个时链接关系依次自动爬取，另外一个时规律使用循环自动爬取
+2. 之前的自动爬取网页适合有规律的页面，使用循环遍历比较方便
+3. CrawlSpider爬取可以适合无规律的url网页自动爬取任务
+4. CrawlSpider更适合做通用爬虫
+
+## 第十七章 Scrapy高级应用
+
+### 17.1、如何在python3中操作数据库
+
+安装mysql模块
+
+~~~shell
+pip install pymysql3
+~~~
+
+代码
+
+~~~python
+import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+from ..items import MysqlpjtItem
+
+
+class MysqlSpider(CrawlSpider):
+    name = 'mysql'
+    allowed_domains = ['sina.com.cn']
+    start_urls = ['http://news.sina.com.cn/']
+
+    rules = (
+        Rule(LinkExtractor(allow=('.*?/[0-9]{4}.[0-9]{2}.[0-9]{2}.doc-.*?shtml'), allow_domains=('sina.com.cn')),
+             callback='parse_item', follow=True),
+    )
+
+    def parse_item(self, response):
+        item = MysqlpjtItem()
+        # 通过xpath表达式提取页面标题
+        item["name"] = response.xpath("/html/head/title/text()").extract()
+        # 通过xpath表达式提取页面的关键字
+        item["keywd"] = response.xpath("/html/head/meta[@name='keywords']/@content").extract()
+        return item
+
+~~~
+
+## 第十八章 项目实战
+
+### 18.1、博客类爬虫项目功能分析
+
+实现功能：
+
+1. 爬取博客中任意一个用户的所有博文信息
+2. 将博文的文章名、文章URL、文章点击数、文章评论数等信息提取出来
+3. 将提取出来的文章名、文章URL、文章点击数、文章评论数等信息自动写入MySQL数据库中存储
+
+~~~python
+import scrapy
+import re
+import urllib.request
+from ..items import HexunpjtItem
+from scrapy.http import Request
+
+HEADERS = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+           "Accept-Language": "zh-CN,zh;q=0.8,en-US,q=0.5,en;q=0.3",
+           "User-Agent": "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+           "Connection": "keep-alive"
+           }
+
+
+class MyhexspiderSpider(scrapy.Spider):
+    name = 'myhexspider'
+    allowed_domains = ['hexun.com']
+    # 通过要爬取的用户的uid，为后续构造爬取网址做准备
+    uid = "28826438"
+
+    # start_urls = ['http://hexun.com/']
+
+    def start_requests(self):
+        # 首次爬取模拟成浏览器进行
+        yield Request("http://" + str(self.uid) + ".blog.hexun.com/p1/default.html", headers=HEADERS)
+
+    def parse(self, response):
+        item = HexunpjtItem()
+        item['name'] = response.xpath("//span[@class='ArticleSubstanceText']/a/text()").extract()
+        item['url'] = response.xpath("//span[@class='ArticleSubstanceText']/a/@href").extract()
+        # 接下来需要使用urllib和re模块获取博客的评论数和阅读数
+        # 首先提取存储评论数和点击数网址的正则表达式
+        pat_one = '<script type="text/javascript" src="(http://click.tool.hexn.com/.*?)">'
+        # hcur_one 为存储评论数和点击数网址
+        print(pat_one+"\n")
+        print(response.body)
+        hcur_one = re.compile(pat_one).findall(str(response.body))[0]
+        print(hcur_one+"\n")
+        # 模拟成浏览器
+        opener = urllib.request.build_opener()
+        opener.addheaders = [HEADERS]
+        # 将opener安装为全局
+        urllib.request.install_opener(opener)
+        # data为对应博客链表页的所有博文的点击数与评论数数据
+        data = urllib.request.urlopen(hcur_one).read()
+        # pat_two 为提取文章阅读数的正则表达式
+        pat_two = "click\d*?','(\d*>)'"
+        # pat_three 为提取文章评论数的正则表达式
+        pat_three = "comment\d*?','(\d*>)'"
+        # 提取阅读数和评论数数据并分贝赋值给item下的hits和comment
+        item["hits"] = re.compile(pat_two).findall(str(data))
+        item["comment"] = re.compile(pat_three).findall(str(data))
+        yield item
+        # 提取博文列表的总页数
+        pat_four = "blog.hexun.com/p(.*?)/"
+        # 通过正则表达式获取到的数据为一个列表，倒数第二个元素为总页数
+        total_data = re.compile(pat_four).findall(str(response.body))
+        if (len[total_data] >= 2):
+            total_url = total_data[-2]
+        else:
+            total_url = 1
+
+        # 在实际运行中，下一行print的代码可以注释掉，在调式过程中，可以开启下一行的print代码
+        print("一共" + str(total_url) + "页")
+        for i in range(2, int(total_url) + 1):
+            # 构造下一次要爬取的url，爬取一页报文列表页中的数据
+            nexturl = "http://" + str(self.uid) + ".blog.hexun.com/p" + str(i) + "/default.html"
+            # 进行下一次的爬取，下一次的爬取仍然模拟浏览器进行
+            yield Request(nexturl, callback=self.parse, headers=HEADERS)
+~~~

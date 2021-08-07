@@ -58,6 +58,7 @@ class MySqlManager(object):
             self.conn.close()
         if self.cursor != '':
             self.cursor.close()
+        print("链接关闭")
 
     # 查询数据
     def execute_sql(self, sql):
@@ -70,3 +71,10 @@ class MySqlManager(object):
             print(e)
             self.close()
             print("=================")
+
+
+# 测试
+if __name__ == '__main__':
+    database = MySqlManager(hostname="xiongliang.synology.me", password="", username="root", database='school')
+    database.conn_mysql()
+    database.close()

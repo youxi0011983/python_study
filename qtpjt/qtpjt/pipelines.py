@@ -15,7 +15,7 @@ class QtpjtPipeline:
         # 一个图片列表页面中有多张图片，通过for循环依次将图片存储到本地
         for i in range(0, len(item["picurl"])):
             thispic = item["picurl"][i]
-            # 根据上面总结的规律构造出原图片的URL地址
+            # 根据上面总结的规律构造出原图片的URL地址：:
             trueurl = thispic + "_1024.jpg"
             # 构造出图片在本地存储的地址
             localpath = "d:/code/qtpjt/pic/" + item['picid'][i] + ".jpg"
