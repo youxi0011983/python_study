@@ -12,7 +12,7 @@ import pymysql
 class HexunpjtPipeline:
     def __init__(self):
         # 刚开始时链接对应数据库
-        self.conn = pymysql.connect(host="xiongliang.synology.me", passwd="q1w2e3r4", user="root",
+        self.conn = pymysql.connect(host="xiongliang.synology.me", passwd="", user="root",
                                     db='hexun')
 
     def process_item(self, item, spider):
